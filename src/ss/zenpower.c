@@ -47,7 +47,7 @@ gboolean zenpower_init() {
 
     while ((entry = g_dir_read_name(hwmon))) {
         read_raw_hwmon_value(entry, "name", &name);
-        if (strcmp(name, "zenpower")) {
+        if (strcmp(g_strchomp(name), "zenpower") == 0) {
             zenpowerDir = g_strdup(entry);
             break;
         }
