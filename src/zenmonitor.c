@@ -63,9 +63,19 @@ gchar *cpu_model() {
 }
 
 static SensorSource sensor_sources[] = {
-  { "zenpower", zenpower_init, zenpower_get_sensors, zenpower_update, FALSE, NULL },
-  { "msr",      msr_init,      msr_get_sensors,      msr_update,      FALSE, NULL },
-  { NULL }
+    {
+        "zenpower",
+        zenpower_init, zenpower_get_sensors, zenpower_update, zenpower_clear_minmax,
+        FALSE, NULL
+    },
+    {
+        "msr",
+        msr_init, msr_get_sensors, msr_update, msr_clear_minmax,
+        FALSE, NULL
+    },
+    {
+        NULL
+    }
 };
 
 SensorInit *sensor_init_new() {

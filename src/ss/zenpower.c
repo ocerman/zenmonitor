@@ -83,6 +83,15 @@ void zenpower_update() {
     }
 }
 
+void zenpower_clear_minmax() {
+    HwmonSensor *sensor;
+
+    for (sensor = hwmon_sensors; sensor->label; sensor++) {
+        sensor->min = sensor->current_value;
+        sensor->max = sensor->current_value;
+    }
+}
+
 GSList* zenpower_get_sensors() {
     GSList *list = NULL;
     HwmonSensor *sensor;

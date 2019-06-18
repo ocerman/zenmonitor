@@ -15,9 +15,9 @@ typedef struct {
     gboolean  (*func_init)();
     GSList* (*func_get_sensors)();
     void (*func_update)();
+    void (*func_clear_minmax)();
     gboolean enabled;
     GSList *sensors;
-    
 } SensorSource;
 
 SensorInit* sensor_init_new(void);

@@ -158,16 +158,28 @@ static void about_btn_clicked(GtkButton *button, gpointer user_data) {
     gtk_widget_destroy(dialog);
 }
 
+static void clear_btn_clicked(GtkButton *button, gpointer user_data) {
+    SensorSource *source;
+    const SensorInit *sensorData;
+
+    for (source = sensor_sources; source->drv; source++) {
+        if (!source->enabled)
+            continue;
+
+        source->func_clear_minmax();
+    }
+}
+
 int start_gui (SensorSource *ss) {
-    GtkWidget *button;
+    GtkWidget *about_btn;
+    GtkWidget *clear_btn;
+    GtkWidget *box;
     GtkWidget *header;
     GtkWidget *treeview;
     GtkWidget *sw;
     GtkWidget *vbox;
     GtkWidget *dialog;
-    GtkWidget *image;
-    GIcon *icon;
-    
+
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 480, 350);
@@ -179,14 +191,20 @@ int start_gui (SensorSource *ss) {
     gtk_header_bar_set_subtitle(GTK_HEADER_BAR (header), cpu_model());
     gtk_window_set_titlebar (GTK_WINDOW (window), header);
 
-    button = gtk_button_new();
-    icon = g_themed_icon_new("dialog-information");
-    image = gtk_image_new_from_gicon(icon, GTK_ICON_SIZE_BUTTON);
-    g_object_unref(icon);
-    gtk_container_add(GTK_CONTAINER (button), image);
-    gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button);
-    g_signal_connect (button, "clicked", G_CALLBACK (about_btn_clicked), NULL);
+    box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_style_context_add_class (gtk_widget_get_style_context (box), "linked");
 
+    about_btn = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(about_btn), gtk_image_new_from_icon_name("dialog-information", GTK_ICON_SIZE_BUTTON));
+    gtk_container_add(GTK_CONTAINER(box), about_btn);
+
+    clear_btn = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(clear_btn), gtk_image_new_from_icon_name("edit-clear-all", GTK_ICON_SIZE_BUTTON));
+    gtk_container_add(GTK_CONTAINER(box), clear_btn);
+
+    gtk_header_bar_pack_start(GTK_HEADER_BAR(header), box);
+    g_signal_connect(about_btn, "clicked", G_CALLBACK(about_btn_clicked), NULL);
+    g_signal_connect(clear_btn, "clicked", G_CALLBACK(clear_btn_clicked), NULL);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);

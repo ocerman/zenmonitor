@@ -155,6 +155,16 @@ void msr_update() {
     }
 }
 
+void msr_clear_minmax() {
+    gint i;
+
+    package_power_min = package_power;
+    package_power_max = package_power;
+    for (i = 0; i < cores; i++) {
+        core_power_min[i] = core_power[i];
+    }
+}
+
 GSList* msr_get_sensors() {
     GSList *list = NULL;
     SensorInit *data;
