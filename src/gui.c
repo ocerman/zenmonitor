@@ -3,6 +3,8 @@
 #include "gui.h"
 #include "zenmonitor.h"
 
+GtkWidget *window;
+
 static GtkTreeModel *model = NULL;
 static guint timeout = 0;
 static SensorSource *sensor_sources;
@@ -113,18 +115,50 @@ static void add_columns (GtkTreeView *treeview) {
   gtk_tree_view_append_column (treeview, column);
 }
 
+static void about_btn_clicked(GtkButton *button, gpointer user_data) {
+    GtkWidget *dialog;
+    const gchar *website = "https://github.com/ocerman/zenmonitor";
+    const gchar *msg = "<b>Zen Monitor</b>\n"
+                       "Monitoring software for AMD Zen-based CPUs\n"
+                       "<a href=\"%s\">%s</a>\n\n"
+                       "Created by: Ondrej Čerman";
+
+    dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW (window),
+                                    GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                    GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+                                    msg, website, website);
+
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(dialog);
+}
 
 int start_gui (SensorSource *ss) {
-    GtkWidget *window;
+    GtkWidget *button;
+    GtkWidget *header;
     GtkWidget *treeview;
     GtkWidget *sw;
     GtkWidget *vbox;
     GtkWidget *dialog;
+    GtkWidget *image;
+    GIcon *icon;
     
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title(GTK_WINDOW(window), "Zen monitor");
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
     gtk_window_set_default_size(GTK_WINDOW(window), 330, 300);
+
+    header = gtk_header_bar_new();
+    gtk_header_bar_set_show_close_button(GTK_HEADER_BAR (header), TRUE);
+    gtk_header_bar_set_title(GTK_HEADER_BAR (header), "Zen monitor");
+    gtk_header_bar_set_has_subtitle(GTK_HEADER_BAR (header), FALSE);
+    gtk_window_set_titlebar (GTK_WINDOW (window), header);
+
+    button = gtk_button_new();
+    icon = g_themed_icon_new("dialog-information");
+    image = gtk_image_new_from_gicon(icon, GTK_ICON_SIZE_BUTTON);
+    g_object_unref(icon);
+    gtk_container_add(GTK_CONTAINER (button), image);
+    gtk_header_bar_pack_start(GTK_HEADER_BAR (header), button);
+    g_signal_connect (button, "clicked", G_CALLBACK (about_btn_clicked), NULL);
 
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
