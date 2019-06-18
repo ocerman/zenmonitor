@@ -12,6 +12,8 @@ static SensorSource *sensor_sources;
 enum {
     COLUMN_NAME,
     COLUMN_VALUE,
+    COLUMN_MIN,
+    COLUMN_MAX,
     NUM_COLUMNS
 };
 
@@ -36,8 +38,10 @@ static void init_sensors() {
                     data = (SensorInit*)sensor->data;
                     gtk_list_store_append(store, &iter);
                     gtk_list_store_set(store, &iter,
-                                       COLUMN_NAME, data->label,
+                                       COLUMN_NAME,  data->label,
                                        COLUMN_VALUE, " --- ",
+                                       COLUMN_MIN,   " --- ",
+                                       COLUMN_MAX,   " --- ",
                                        -1);
                     sensor = sensor->next;
                     i++;
@@ -49,15 +53,24 @@ static void init_sensors() {
 
 static GtkTreeModel* create_model (void) {
     GtkListStore *store;
-    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING);
+    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
     return GTK_TREE_MODEL (store);
+}
+
+static void set_list_column_value(float num, const gchar *printf_format, GtkTreeIter *iter, gint column){
+    gchar *value;
+    if (num != ERROR_VALUE)
+        value = g_strdup_printf(printf_format, num);
+    else
+        value = g_strdup("    ? ? ?");
+    gtk_list_store_set(GTK_LIST_STORE (model), iter, column, value, -1);
+    g_free(value);
 }
 
 static gboolean update_data (gpointer data) {
     GtkTreeIter iter;
     guint number;
     GSList *node;
-    gchar *value;
     SensorSource *source;
     const SensorInit *sensorData;
 
@@ -77,12 +90,10 @@ static gboolean update_data (gpointer data) {
 
             while(node) {
                 sensorData = (SensorInit*)node->data;
-                if (*(sensorData->value) != ERROR_VALUE)
-                    value = g_strdup_printf(sensorData->printf_format, *(sensorData->value));
-                else
-                    value = g_strdup("    ? ? ?");
-                
-                gtk_list_store_set(GTK_LIST_STORE (model), &iter, COLUMN_VALUE, value, -1);
+                set_list_column_value(*(sensorData->value), sensorData->printf_format, &iter, COLUMN_VALUE);
+                set_list_column_value(*(sensorData->min), sensorData->printf_format, &iter, COLUMN_MIN);
+                set_list_column_value(*(sensorData->max), sensorData->printf_format, &iter, COLUMN_MAX);
+
                 node = node->next;
                 if (!gtk_tree_model_iter_next(model, &iter))
                     break;
@@ -93,26 +104,41 @@ static gboolean update_data (gpointer data) {
 }
 
 static void add_columns (GtkTreeView *treeview) {
-  GtkCellRenderer *renderer;
-  GtkTreeViewColumn *column;
-  GtkTreeModel *model = gtk_tree_view_get_model (treeview);
+    GtkCellRenderer *renderer;
+    GtkTreeViewColumn *column;
+    GtkTreeModel *model = gtk_tree_view_get_model (treeview);
 
-  // NAME
-  renderer = gtk_cell_renderer_text_new ();
-  
-  column = gtk_tree_view_column_new_with_attributes ("Sensor", renderer,
+    // NAME
+    renderer = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Sensor", renderer,
                                                      "text", COLUMN_NAME,
                                                      NULL);
-  g_object_set(renderer, "family", "monotype", NULL);
-  gtk_tree_view_append_column (treeview, column);
+    g_object_set(renderer, "family", "monotype", NULL);
+    gtk_tree_view_append_column (treeview, column);
 
-  //VALUE
-  renderer = gtk_cell_renderer_text_new ();
-  column = gtk_tree_view_column_new_with_attributes ("Value", renderer,
+    //VALUE
+    renderer = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Value", renderer,
                                                      "text", COLUMN_VALUE,
                                                      NULL);
-  g_object_set(renderer, "family", "monotype", NULL);
-  gtk_tree_view_append_column (treeview, column);
+    g_object_set(renderer, "family", "monotype", NULL);
+    gtk_tree_view_append_column (treeview, column);
+
+    //MIN
+    renderer = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Min", renderer,
+                                                     "text", COLUMN_MIN,
+                                                     NULL);
+    g_object_set(renderer, "family", "monotype", NULL);
+    gtk_tree_view_append_column (treeview, column);
+
+    //MAX
+    renderer = gtk_cell_renderer_text_new ();
+    column = gtk_tree_view_column_new_with_attributes ("Max", renderer,
+                                                     "text", COLUMN_MAX,
+                                                     NULL);
+    g_object_set(renderer, "family", "monotype", NULL);
+    gtk_tree_view_append_column (treeview, column);
 }
 
 static void about_btn_clicked(GtkButton *button, gpointer user_data) {
@@ -144,7 +170,7 @@ int start_gui (SensorSource *ss) {
     
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 400, 350);
+    gtk_window_set_default_size(GTK_WINDOW(window), 480, 350);
 
     header = gtk_header_bar_new();
     gtk_header_bar_set_show_close_button(GTK_HEADER_BAR (header), TRUE);

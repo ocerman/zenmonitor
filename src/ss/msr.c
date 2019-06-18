@@ -25,7 +25,11 @@ gulong *core_eng_b = NULL;
 gulong *core_eng_a = NULL;
 
 gfloat package_power;
+gfloat package_power_min;
+gfloat package_power_max;
 gfloat *core_power;
+gfloat *core_power_min;
+gfloat *core_power_max;
 
 static guint get_core_count() {
     guint eax = 0, ebx = 0, ecx = 0, edx = 0;
@@ -87,6 +91,7 @@ gulong get_core_energy(gint core) {
 
 gboolean msr_init() {
     int i;
+    size_t sz;
 
     if (!check_zen())
         return FALSE;
@@ -107,6 +112,14 @@ gboolean msr_init() {
     core_eng_b = malloc(cores * sizeof (gulong));
     core_eng_a = malloc(cores * sizeof (gulong));
     core_power = malloc(cores * sizeof (gfloat));
+    core_power_min = malloc(cores * sizeof (gfloat));
+    core_power_max = malloc(cores * sizeof (gfloat));
+
+    msr_update();
+    memcpy(core_power_min, core_power, cores * sizeof (gfloat));
+    memcpy(core_power_max, core_power, cores * sizeof (gfloat));
+    package_power_min = package_power;
+    package_power_max = package_power;
 
     return TRUE;
 }
@@ -128,8 +141,17 @@ void msr_update() {
     }
 
     package_power = (package_eng_a - package_eng_b) * energy_unit / MESUREMENT_TIME;
+    if (package_power < package_power_min)
+        package_power_min = package_power;
+    if (package_power > package_power_max)
+        package_power_max = package_power;
+
     for (i = 0; i < cores; i++) {
         core_power[i] = (core_eng_a[i] - core_eng_b[i]) * energy_unit / MESUREMENT_TIME;
+        if (core_power[i] < core_power_min[i])
+            core_power_min[i] = core_power[i];
+        if (core_power[i] > core_power_max[i])
+            core_power_max[i] = core_power[i];
     }
 }
 
@@ -141,6 +163,8 @@ GSList* msr_get_sensors() {
     data = sensor_init_new();
     data->label = g_strdup("Package Power");
     data->value = &package_power;
+    data->min = &package_power_min;
+    data->max = &package_power_max;
     data->printf_format = MSR_PWR_PRINTF_FORMAT;
     list = g_slist_append(list, data);
 
@@ -148,6 +172,8 @@ GSList* msr_get_sensors() {
         data = sensor_init_new();
         data->label = g_strdup_printf("Core %d Power", i);
         data->value = &(core_power[i]);
+        data->min = &(core_power_min[i]);
+        data->max = &(core_power_max[i]);
         data->printf_format = MSR_PWR_PRINTF_FORMAT;
         list = g_slist_append(list, data);
     }

@@ -11,17 +11,19 @@ typedef struct
     const gchar *printf_format;
     const double adjust_ratio;
     float current_value;
+    float min;
+    float max;
 } HwmonSensor;
 
 HwmonSensor hwmon_sensors[] = {
-  {"CPU Temperature (tCtrl)",   "temp1_input",  " %6.2f°C", 1000.0,    0.0},
-  {"CPU Temperature (tDie)",    "temp2_input",  " %6.2f°C", 1000.0,    0.0},
-  {"CPU Core Voltage (SVI2)",   "in1_input",    " %8.3f V", 1000.0,    0.0},
-  {"SOC Voltage (SVI2)",        "in2_input",    " %8.3f V", 1000.0,    0.0},
-  {"CPU Core Current (SVI2)",   "curr1_input",  " %8.3f A", 1000.0,    0.0},
-  {"SOC Current (SVI2)",        "curr2_input",  " %8.3f A", 1000.0,    0.0},
-  {"CPU Core Power (SVI2)",     "power1_input", " %8.3f W", 1000000.0, 0.0},
-  {"SOC Power (SVI2)",          "power2_input", " %8.3f W", 1000000.0, 0.0},
+  {"CPU Temperature (tCtrl)",   "temp1_input",  " %6.2f°C", 1000.0,    0.0, 999.0, 0.0},
+  {"CPU Temperature (tDie)",    "temp2_input",  " %6.2f°C", 1000.0,    0.0, 999.0, 0.0},
+  {"CPU Core Voltage (SVI2)",   "in1_input",    " %8.3f V", 1000.0,    0.0, 999.0, 0.0},
+  {"SOC Voltage (SVI2)",        "in2_input",    " %8.3f V", 1000.0,    0.0, 999.0, 0.0},
+  {"CPU Core Current (SVI2)",   "curr1_input",  " %8.3f A", 1000.0,    0.0, 999.0, 0.0},
+  {"SOC Current (SVI2)",        "curr2_input",  " %8.3f A", 1000.0,    0.0, 999.0, 0.0},
+  {"CPU Core Power (SVI2)",     "power1_input", " %8.3f W", 1000000.0, 0.0, 999.0, 0.0},
+  {"SOC Power (SVI2)",          "power2_input", " %8.3f W", 1000000.0, 0.0, 999.0, 0.0},
   {0, NULL}
 };
 
@@ -66,6 +68,13 @@ void zenpower_update() {
     for (sensor = hwmon_sensors; sensor->label; sensor++) {
         if (read_raw_hwmon_value(zenpowerDir, sensor->file, &tmp)){
             sensor->current_value = atof(tmp) / sensor->adjust_ratio;
+
+            if (sensor->current_value < sensor->min)
+                sensor->min = sensor->current_value;
+
+            if (sensor->current_value > sensor->max)
+                sensor->max = sensor->current_value;
+
             g_free(tmp);
         }
         else{
@@ -83,6 +92,8 @@ GSList* zenpower_get_sensors() {
         data = sensor_init_new();
         data->label = g_strdup(sensor->label);
         data->value = &sensor->current_value;
+        data->min = &sensor->min;
+        data->max = &sensor->max;
         data->printf_format = sensor->printf_format;
         list = g_slist_append(list, data);
     }

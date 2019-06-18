@@ -4,6 +4,8 @@ typedef struct
 {
     gchar *label;
     float *value;
+    float *min;
+    float *max;
     const gchar *printf_format;
 }
 SensorInit;
