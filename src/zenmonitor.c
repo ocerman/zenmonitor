@@ -8,8 +8,10 @@
 #define AMD_STRING "AuthenticAMD"
 #define ZEN_FAMILY 0x17
 
+// AMD PPR = https://www.amd.com/system/files/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
+
 gboolean check_zen() {
-    unsigned int eax = 0, ebx = 0, ecx = 0, edx = 0, ext_family; 
+    guint32 eax = 0, ebx = 0, ecx = 0, edx = 0, ext_family;
     char vendor[13];
 
     __get_cpuid(0, &eax, &ebx, &ecx, &edx);
@@ -31,6 +33,33 @@ gboolean check_zen() {
     }
 
     return TRUE;
+}
+
+gchar *cpu_model() {
+    guint32 eax = 0, ebx = 0, ecx = 0, edx = 0;
+    char model[48];
+
+    // AMD PPR: page 65-68 - CPUID_Fn80000002_EAX-CPUID_Fn80000004_EDX
+    __get_cpuid(0x80000002, &eax, &ebx, &ecx, &edx);
+    memcpy(model, &eax, 4);
+    memcpy(model+4, &ebx, 4);
+    memcpy(model+8, &ecx, 4);
+    memcpy(model+12, &edx, 4);
+
+    __get_cpuid(0x80000003, &eax, &ebx, &ecx, &edx);
+    memcpy(model+16, &eax, 4);
+    memcpy(model+20, &ebx, 4);
+    memcpy(model+24, &ecx, 4);
+    memcpy(model+28, &edx, 4);
+
+    __get_cpuid(0x80000004, &eax, &ebx, &ecx, &edx);
+    memcpy(model+32, &eax, 4);
+    memcpy(model+36, &ebx, 4);
+    memcpy(model+40, &ecx, 4);
+    memcpy(model+44, &edx, 4);
+
+    model[48] = 0;
+    return g_strdup(model);
 }
 
 static SensorSource sensor_sources[] = {
