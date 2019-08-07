@@ -1,6 +1,7 @@
 #include <glib.h>
 #include "zenmonitor.h"
 #include "zenpower.h"
+#include "stdlib.h"
 
 GSList *zp_sensors = NULL;
 static int nodes = 0;
