@@ -59,7 +59,7 @@ gchar *cpu_model() {
     memcpy(model+44, &edx, 4);
 
     model[48] = 0;
-    return g_strdup(model);
+    return g_strdup(g_strchomp(model));
 }
 
 static SensorSource sensor_sources[] = {
