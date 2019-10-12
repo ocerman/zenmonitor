@@ -1,4 +1,6 @@
 #include <glib.h>
+#include <stdlib.h>
+#include <string.h>
 #include "zenmonitor.h"
 #include "sysfs.h"
 #include "os.h"
@@ -22,7 +24,7 @@ static gdouble get_frequency(guint coreid) {
 
 gboolean os_init() {
     gshort *cpu_dev_ids = NULL;
-    gint i;
+    guint i;
 
     if (!check_zen())
         return FALSE;
@@ -52,7 +54,7 @@ gboolean os_init() {
 }
 
 void os_update() {
-    gint i;
+    guint i;
 
     for (i = 0; i < cores; i++) {
         core_freq[i] = get_frequency(i);
@@ -64,7 +66,7 @@ void os_update() {
 }
 
 void os_clear_minmax() {
-    gint i;
+    guint i;
 
     for (i = 0; i < cores; i++) {
         core_freq_min[i] = core_freq[i];
@@ -75,7 +77,7 @@ void os_clear_minmax() {
 GSList* os_get_sensors() {
     GSList *list = NULL;
     SensorInit *data;
-    gint i;
+    guint i;
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();

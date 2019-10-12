@@ -1,5 +1,7 @@
 #include <glib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sysfs.h"
 #include "zenmonitor.h"
 
@@ -26,7 +28,7 @@ gshort* get_cpu_dev_ids(){
             if (g_file_get_contents(filename, &buffer, NULL, NULL)) {
                 coreid = (gshort) atoi(buffer);
 
-                if (coreid < cores && cpu_dev_ids[coreid] == -1) {
+                if ((guint) coreid < cores && cpu_dev_ids[coreid] == -1) {
                     cpu_dev_ids[coreid] = cpuid;
                 }
             }

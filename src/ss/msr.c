@@ -76,7 +76,7 @@ gulong get_core_energy(gint core) {
 
 gboolean msr_init() {
     gshort *cpu_dev_ids = NULL;
-    int i;
+    guint i;
 
     if (!check_zen())
         return FALSE;
@@ -112,7 +112,7 @@ gboolean msr_init() {
 }
 
 void msr_update() {
-    gint i;
+    guint i;
 
     package_eng_b = get_package_energy();
     for (i = 0; i < cores; i++) {
@@ -142,7 +142,7 @@ void msr_update() {
 }
 
 void msr_clear_minmax() {
-    gint i;
+    guint i;
 
     package_power_min = package_power;
     package_power_max = package_power;
@@ -155,7 +155,7 @@ void msr_clear_minmax() {
 GSList* msr_get_sensors() {
     GSList *list = NULL;
     SensorInit *data;
-    gint i;
+    guint i;
 
     data = sensor_init_new();
     data->label = g_strdup("Package Power");
