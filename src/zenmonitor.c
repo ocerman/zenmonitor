@@ -1,11 +1,11 @@
 #include <gtk/gtk.h>
 #include <cpuid.h>
+#include <string.h>
 #include "zenmonitor.h"
 #include "zenpower.h"
 #include "msr.h"
 #include "os.h"
 #include "gui.h"
-#include "string.h"
 
 #define AMD_STRING "AuthenticAMD"
 #define ZEN_FAMILY 0x17
