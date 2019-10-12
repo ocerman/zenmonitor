@@ -74,8 +74,7 @@ gboolean zenpower_init() {
     const gchar *entry;
     gchar *name = NULL;
     HwmonSensorType *type;
-    HwmonSensor *sensor;
-    
+
     hwmon = g_dir_open("/sys/class/hwmon", 0, NULL);
     if (!hwmon)
         return FALSE;

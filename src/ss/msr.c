@@ -8,6 +8,7 @@
 #include "string.h"
 #include "zenmonitor.h"
 #include "msr.h"
+#include "sysfs.h"
 
 #define MSR_PWR_PRINTF_FORMAT " %8.3f W"
 #define MESUREMENT_TIME 0.1
@@ -15,16 +16,15 @@
 // AMD PPR  = https://www.amd.com/system/files/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
 // AMD OSRR = https://developer.amd.com/wp-content/resources/56255_3_03.PDF
 
-guint cores = 0;
-guint threads_per_code = 0;
-gdouble energy_unit = 0;
+static guint cores = 0;
+static gdouble energy_unit = 0;
 
-gint *msr_files = NULL;
+static gint *msr_files = NULL;
 
-gulong package_eng_b = 0;
-gulong package_eng_a = 0;
-gulong *core_eng_b = NULL;
-gulong *core_eng_a = NULL;
+static gulong package_eng_b = 0;
+static gulong package_eng_a = 0;
+static gulong *core_eng_b = NULL;
+static gulong *core_eng_a = NULL;
 
 gfloat package_power;
 gfloat package_power_min;
@@ -33,27 +33,10 @@ gfloat *core_power;
 gfloat *core_power_min;
 gfloat *core_power_max;
 
-static guint get_core_count() {
-    guint eax = 0, ebx = 0, ecx = 0, edx = 0;
-    guint logical_cpus;
 
-    // AMD PPR: page 57 - CPUID_Fn00000001_EBX
-    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
-    logical_cpus = (ebx >> 16) & 0xFF;
-
-    // AMD PPR: page 82 - CPUID_Fn8000001E_EBX 
-    __get_cpuid(0x8000001E, &eax, &ebx, &ecx, &edx);
-    threads_per_code = ((ebx >> 8) & 0xF) + 1;
-
-    if (threads_per_code == 0)
-        return logical_cpus;
-
-    return logical_cpus / threads_per_code;
-}
-
-static gint open_msr(gshort core) {
+static gint open_msr(gshort devid) {
     gchar msr_path[20];
-    sprintf(msr_path, "/dev/cpu/%d/msr", core * threads_per_code);
+    sprintf(msr_path, "/dev/cpu/%d/msr", devid);
     return open(msr_path, O_RDONLY);
 }
 
@@ -92,8 +75,8 @@ gulong get_core_energy(gint core) {
 }
 
 gboolean msr_init() {
+    gshort *cpu_dev_ids = NULL;
     int i;
-    size_t sz;
 
     if (!check_zen())
         return FALSE;
@@ -102,10 +85,12 @@ gboolean msr_init() {
     if (cores == 0)
         return FALSE;
 
+    cpu_dev_ids = get_cpu_dev_ids();
     msr_files = malloc(cores * sizeof (gint));
     for (i = 0; i < cores; i++) {
-        msr_files[i] = open_msr(i);
+        msr_files[i] = open_msr(cpu_dev_ids[i]);
     }
+    g_free(cpu_dev_ids);
 
     energy_unit = get_energy_unit();
     if (energy_unit == 0)
@@ -127,7 +112,6 @@ gboolean msr_init() {
 }
 
 void msr_update() {
-    GSList *list = NULL;
     gint i;
 
     package_eng_b = get_package_energy();

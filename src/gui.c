@@ -23,7 +23,6 @@ static void init_sensors() {
     GtkListStore *store;
     SensorSource *source;
     const SensorInit *data;
-    gboolean added;
     guint i = 0;
 
     store = GTK_LIST_STORE(model);
@@ -69,7 +68,6 @@ static void set_list_column_value(float num, const gchar *printf_format, GtkTree
 
 static gboolean update_data (gpointer data) {
     GtkTreeIter iter;
-    guint number;
     GSList *node;
     SensorSource *source;
     const SensorInit *sensorData;
@@ -106,7 +104,6 @@ static gboolean update_data (gpointer data) {
 static void add_columns (GtkTreeView *treeview) {
     GtkCellRenderer *renderer;
     GtkTreeViewColumn *column;
-    GtkTreeModel *model = gtk_tree_view_get_model (treeview);
 
     // NAME
     renderer = gtk_cell_renderer_text_new ();
@@ -160,7 +157,6 @@ static void about_btn_clicked(GtkButton *button, gpointer user_data) {
 
 static void clear_btn_clicked(GtkButton *button, gpointer user_data) {
     SensorSource *source;
-    const SensorInit *sensorData;
 
     for (source = sensor_sources; source->drv; source++) {
         if (!source->enabled)

@@ -24,3 +24,4 @@ SensorInit* sensor_init_new(void);
 void sensor_init_free(SensorInit *s);
 gboolean check_zen();
 gchar *cpu_model();
+guint get_core_count();
