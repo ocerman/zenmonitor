@@ -14,15 +14,15 @@
 // AMD PPR  = https://www.amd.com/system/files/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
 // AMD OSRR = https://developer.amd.com/wp-content/resources/56255_3_03.PDF
 
-guint cores = 0;
-gdouble energy_unit = 0;
+static guint cores = 0;
+static gdouble energy_unit = 0;
 
-gint *msr_files = NULL;
+static gint *msr_files = NULL;
 
-gulong package_eng_b = 0;
-gulong package_eng_a = 0;
-gulong *core_eng_b = NULL;
-gulong *core_eng_a = NULL;
+static gulong package_eng_b = 0;
+static gulong package_eng_a = 0;
+static gulong *core_eng_b = NULL;
+static gulong *core_eng_a = NULL;
 
 gfloat package_power;
 gfloat package_power_min;
@@ -75,7 +75,6 @@ gulong get_core_energy(gint core) {
 gboolean msr_init() {
     gshort *cpu_dev_ids = NULL;
     int i;
-    size_t sz;
 
     if (!check_zen())
         return FALSE;
@@ -111,7 +110,6 @@ gboolean msr_init() {
 }
 
 void msr_update() {
-    GSList *list = NULL;
     gint i;
 
     package_eng_b = get_package_energy();
