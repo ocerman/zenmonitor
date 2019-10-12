@@ -3,6 +3,7 @@
 #include "zenmonitor.h"
 #include "zenpower.h"
 #include "msr.h"
+#include "os.h"
 #include "gui.h"
 
 #define AMD_STRING "AuthenticAMD"
@@ -89,6 +90,11 @@ static SensorSource sensor_sources[] = {
     {
         "msr",
         msr_init, msr_get_sensors, msr_update, msr_clear_minmax,
+        FALSE, NULL
+    },
+    {
+        "os",
+        os_init, os_get_sensors, os_update, os_clear_minmax,
         FALSE, NULL
     },
     {

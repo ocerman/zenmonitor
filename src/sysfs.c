@@ -1,8 +1,7 @@
 #include <glib.h>
 #include <stdio.h>
+#include "sysfs.h"
 #include "zenmonitor.h"
-
-#define SYSFS_DIR_CPUS "/sys/bus/cpu/devices"
 
 gshort* get_cpu_dev_ids(){
     gshort *cpu_dev_ids = NULL;
