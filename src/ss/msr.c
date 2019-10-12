@@ -148,6 +148,7 @@ void msr_clear_minmax() {
     package_power_max = package_power;
     for (i = 0; i < cores; i++) {
         core_power_min[i] = core_power[i];
+        core_power_max[i] = core_power[i];
     }
 }
 
