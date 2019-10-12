@@ -4,6 +4,7 @@
 #include "zenpower.h"
 #include "msr.h"
 #include "gui.h"
+#include "string.h"
 
 #define AMD_STRING "AuthenticAMD"
 #define ZEN_FAMILY 0x17
