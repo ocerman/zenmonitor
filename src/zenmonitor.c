@@ -62,6 +62,24 @@ gchar *cpu_model() {
     return g_strdup(g_strchomp(model));
 }
 
+guint get_core_count() {
+    guint eax = 0, ebx = 0, ecx = 0, edx = 0;
+    guint logical_cpus, threads_per_code;
+
+    // AMD PPR: page 57 - CPUID_Fn00000001_EBX
+    __get_cpuid(1, &eax, &ebx, &ecx, &edx);
+    logical_cpus = (ebx >> 16) & 0xFF;
+
+    // AMD PPR: page 82 - CPUID_Fn8000001E_EBX
+    __get_cpuid(0x8000001E, &eax, &ebx, &ecx, &edx);
+    threads_per_code = ((ebx >> 8) & 0xF) + 1;
+
+    if (threads_per_code == 0)
+        return logical_cpus;
+
+    return logical_cpus / threads_per_code;
+}
+
 static SensorSource sensor_sources[] = {
     {
         "zenpower",
