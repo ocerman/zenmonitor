@@ -6,6 +6,7 @@ It can monitor these values:
  - CPU Core (SVI2) Voltage, Current and Power
  - SOC (SVI2) Voltage, Current and Power
  - Package and Core Power
+ - Core Frequency (from OS)
 
 ![screenshot](screenshot.png)
 
