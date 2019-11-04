@@ -26,7 +26,7 @@ typedef struct
 } HwmonSensor;
 
 static HwmonSensorType hwmon_stype[] = {
-  {"CPU Temperature (tCtrl)",   "temp1_input",  " %6.2f°C", 1000.0},
+  {"CPU Temperature (tCtl)",    "temp1_input",  " %6.2f°C", 1000.0},
   {"CPU Temperature (tDie)",    "temp2_input",  " %6.2f°C", 1000.0},
   {"CCD1 Temperature",          "temp3_input",  " %6.2f°C", 1000.0},
   {"CCD2 Temperature",          "temp4_input",  " %6.2f°C", 1000.0},
