@@ -5,14 +5,14 @@ It can monitor these values:
  - CPU Temperature
  - CPU Core (SVI2) Voltage, Current and Power
  - SOC (SVI2) Voltage, Current and Power
- - Package and Core Power
+ - Package and Core Power (RAPL)
  - Core Frequency (from OS)
 
 ![screenshot](screenshot.png)
 
 ## Dependencies
  - [zenpower driver](https://github.com/ocerman/zenpower/) - For monitoring CPU temperature and SVI2 sensors
- - MSR driver - For monitoring Package/Core Power
+ - MSR driver - For monitoring Package/Core Power (RAPL)
 
 Follow [zenpower README.md](https://github.com/ocerman/zenpower/blob/master/README.md) to install and activate zenpower module.
 Enter `sudo modprobe msr` to enable MSR driver.
@@ -23,9 +23,25 @@ Make sure that GTK3 dev package and common build tools are installed.
 make
 ```
 
-## Running
+## Launching
+You can launch app by `sudo ./zenmonitor`, or you can install it to your system and then launch it from your OS menu.
+
+Note: Because superuser privileges are usually needed to access data from MSR driver, you need to launch zenmonitor as root for monitoring CPU power usage (RAPL).
+
+## Installing
+By default, Zenmonitor will be installed to /usr/local.
 ```
-sudo ./zenpower
+sudo make install
+```
+
+To add menu item for launching zenpower as root (Polkit is required):
+```
+sudo make install-polkit
+```
+
+## Uninstalling
+```
+sudo make uninstall
 ```
 
 ## Setup on ubuntu
@@ -39,5 +55,6 @@ cd ~
 git clone https://github.com/ocerman/zenmonitor
 cd zenmonitor
 make
-sudo ./zenmonitor
+sudo make install
+sudo make install-polkit
 ```

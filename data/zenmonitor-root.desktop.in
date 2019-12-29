@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Zenmonitor (root)
+Comment=Monitoring software for AMD Zen-based CPUs
+Exec=pkexec @APP_EXEC@
+Type=Application
+Categories=GTK;System;
+Terminal=false
+Keywords=CPU;AMD;zen;system;core;speed;clock;temperature;voltage;
