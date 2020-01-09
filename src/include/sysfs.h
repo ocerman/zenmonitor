@@ -1,3 +1,8 @@
 #define SYSFS_DIR_CPUS "/sys/devices/system/cpu"
 
-gshort* get_cpu_dev_ids();
+struct cpudev {
+	gshort coreid;
+	gshort cpuid;
+};
+
+struct cpudev * get_cpu_dev_ids(void);

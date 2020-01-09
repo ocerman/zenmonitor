@@ -9,6 +9,7 @@
 
 static gchar **frq_files = NULL;
 static guint cores;
+static struct cpudev *cpu_dev_ids;
 
 gfloat *core_freq;
 gfloat *core_freq_min;
@@ -22,8 +23,7 @@ static gdouble get_frequency(guint coreid) {
     return atoi(data) / 1000000.0;
 }
 
-gboolean os_init() {
-    gshort *cpu_dev_ids = NULL;
+gboolean os_init(void) {
     guint i;
 
     if (!check_zen())
@@ -38,9 +38,8 @@ gboolean os_init() {
     for (i = 0; i < cores; i++) {
         frq_files[i] = g_strdup_printf(
                         "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq",
-                        cpu_dev_ids[i]);
+                        cpu_dev_ids[i].cpuid);
     }
-    g_free(cpu_dev_ids);
 
     core_freq = malloc(cores * sizeof (gfloat));
     core_freq_min = malloc(cores * sizeof (gfloat));
@@ -53,7 +52,7 @@ gboolean os_init() {
     return TRUE;
 }
 
-void os_update() {
+void os_update(void) {
     guint i;
 
     for (i = 0; i < cores; i++) {
@@ -65,7 +64,7 @@ void os_update() {
     }
 }
 
-void os_clear_minmax() {
+void os_clear_minmax(void) {
     guint i;
 
     for (i = 0; i < cores; i++) {
@@ -74,14 +73,14 @@ void os_clear_minmax() {
     }
 }
 
-GSList* os_get_sensors() {
+GSList* os_get_sensors(void) {
     GSList *list = NULL;
     SensorInit *data;
     guint i;
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
-        data->label = g_strdup_printf("Core %d Frequency", i);
+        data->label = g_strdup_printf("Core %d Frequency", cpu_dev_ids[i].coreid);
         data->value = &(core_freq[i]);
         data->min = &(core_freq_min[i]);
         data->max = &(core_freq_max[i]);

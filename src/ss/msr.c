@@ -18,6 +18,7 @@
 
 static guint cores = 0;
 static gdouble energy_unit = 0;
+static struct cpudev *cpu_dev_ids;
 
 static gint *msr_files = NULL;
 
@@ -75,7 +76,6 @@ gulong get_core_energy(gint core) {
 }
 
 gboolean msr_init() {
-    gshort *cpu_dev_ids = NULL;
     guint i;
 
     if (!check_zen())
@@ -88,9 +88,8 @@ gboolean msr_init() {
     cpu_dev_ids = get_cpu_dev_ids();
     msr_files = malloc(cores * sizeof (gint));
     for (i = 0; i < cores; i++) {
-        msr_files[i] = open_msr(cpu_dev_ids[i]);
+        msr_files[i] = open_msr(cpu_dev_ids[i].cpuid);
     }
-    g_free(cpu_dev_ids);
 
     energy_unit = get_energy_unit();
     if (energy_unit == 0)
@@ -167,7 +166,7 @@ GSList* msr_get_sensors() {
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
-        data->label = g_strdup_printf("Core %d Power", i);
+        data->label = g_strdup_printf("Core %d Power", cpu_dev_ids[i].coreid);
         data->value = &(core_power[i]);
         data->min = &(core_power_min[i]);
         data->max = &(core_power_max[i]);
