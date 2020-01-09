@@ -166,6 +166,23 @@ static void clear_btn_clicked(GtkButton *button, gpointer user_data) {
     }
 }
 
+static gboolean mid_search_eq_func(GtkTreeModel *model, gint column, const gchar *key, GtkTreeIter *iter) {
+    gchar *iter_string = NULL, *lc_iter_string = NULL, *lc_key = NULL;
+    gboolean result;
+
+    gtk_tree_model_get(model, iter, column, &iter_string, -1);
+    lc_iter_string = g_utf8_strdown(iter_string, -1);
+    lc_key = g_utf8_strdown(key, -1);
+
+    result = (g_strrstr(lc_iter_string, lc_key) == NULL);
+
+    g_free(iter_string);
+    g_free(lc_iter_string);
+    g_free(lc_key);
+
+    return result;
+}
+
 int start_gui (SensorSource *ss) {
     GtkWidget *about_btn;
     GtkWidget *clear_btn;
@@ -215,11 +232,16 @@ int start_gui (SensorSource *ss) {
 
     model = create_model();
     treeview = gtk_tree_view_new_with_model(model);
-    g_object_unref(model);
 
     gtk_container_add (GTK_CONTAINER(sw), treeview);
     add_columns(GTK_TREE_VIEW(treeview));
     gtk_widget_show_all(window);
+
+    gtk_tree_view_set_search_column(GTK_TREE_VIEW(treeview), COLUMN_NAME);
+    gtk_tree_view_set_search_equal_func(GTK_TREE_VIEW(treeview),
+        (GtkTreeViewSearchEqualFunc)mid_search_eq_func, model, NULL);
+
+    g_object_unref(model);
 
     if (check_zen()){
         sensor_sources = ss;
