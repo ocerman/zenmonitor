@@ -193,10 +193,12 @@ int start_gui (SensorSource *ss) {
     about_btn = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(about_btn), gtk_image_new_from_icon_name("dialog-information", GTK_ICON_SIZE_BUTTON));
     gtk_container_add(GTK_CONTAINER(box), about_btn);
+    gtk_widget_set_tooltip_text(about_btn, "About Zen monitor");
 
     clear_btn = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(clear_btn), gtk_image_new_from_icon_name("edit-clear-all", GTK_ICON_SIZE_BUTTON));
     gtk_container_add(GTK_CONTAINER(box), clear_btn);
+    gtk_widget_set_tooltip_text(clear_btn, "Clear Min/Max");
 
     gtk_header_bar_pack_start(GTK_HEADER_BAR(header), box);
     g_signal_connect(about_btn, "clicked", G_CALLBACK(about_btn_clicked), NULL);
