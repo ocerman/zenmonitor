@@ -114,8 +114,26 @@ void sensor_init_free(SensorInit *s) {
     }
 }
 
+gboolean display_coreid = 0;
+
+static GOptionEntry options[] =
+{
+    { "coreid", 'c', 0, G_OPTION_ARG_NONE, &display_coreid, "Display core_id instead of core index", NULL },
+    { NULL }
+};
+
 int main (int argc, char *argv[])
 {
-    gtk_init(&argc, &argv);
+    GError *error = NULL;
+    GOptionContext *context;
+
+    context = g_option_context_new ("- Zenmonitor display options");
+    g_option_context_add_main_entries(context, options, NULL);
+    g_option_context_add_group(context, gtk_get_option_group (TRUE));
+    if (!g_option_context_parse(context, &argc, &argv, &error)) {
+        g_print ("option parsing failed: %s\n", error->message);
+        exit (1);
+    }
+
     start_gui(sensor_sources);
 }

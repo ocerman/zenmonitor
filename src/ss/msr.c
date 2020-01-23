@@ -166,7 +166,7 @@ GSList* msr_get_sensors() {
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
-        data->label = g_strdup_printf("Core %d Power", cpu_dev_ids[i].coreid);
+        data->label = g_strdup_printf("Core %d Power", display_coreid ? cpu_dev_ids[i].coreid: i);
         data->value = &(core_power[i]);
         data->min = &(core_power_min[i]);
         data->max = &(core_power_max[i]);

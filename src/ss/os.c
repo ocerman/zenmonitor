@@ -80,7 +80,7 @@ GSList* os_get_sensors(void) {
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
-        data->label = g_strdup_printf("Core %d Frequency", cpu_dev_ids[i].coreid);
+        data->label = g_strdup_printf("Core %d Frequency", display_coreid ? cpu_dev_ids[i].coreid: i);
         data->value = &(core_freq[i]);
         data->min = &(core_freq_min[i]);
         data->max = &(core_freq_max[i]);
