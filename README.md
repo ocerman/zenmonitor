@@ -28,6 +28,10 @@ You can launch app by `sudo ./zenmonitor`, or you can install it to your system 
 
 Note: Because superuser privileges are usually needed to access data from MSR driver, you need to launch zenmonitor as root for monitoring CPU power usage (RAPL).
 
+## Command line arguments
+
+``--coreid`` - Display core_id instead of core index
+
 ## Installing
 By default, Zenmonitor will be installed to /usr/local.
 ```
