@@ -17,10 +17,15 @@ gfloat *core_freq_max;
 
 static gdouble get_frequency(guint coreid) {
     gchar *data;
+    gdouble freq;
+
     if (!g_file_get_contents(frq_files[coreid], &data, NULL, NULL))
         return 0.0;
 
-    return atoi(data) / 1000000.0;
+    freq = atoi(data) / 1000000.0;
+    g_free(data);
+
+    return freq;
 }
 
 gboolean os_init(void) {
