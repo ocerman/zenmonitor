@@ -8,6 +8,7 @@ GtkWidget *window;
 static GtkTreeModel *model = NULL;
 static guint timeout = 0;
 static SensorSource *sensor_sources;
+static const guint defaultHeight = 350;
 
 enum {
     COLUMN_NAME,
@@ -183,6 +184,23 @@ static gboolean mid_search_eq_func(GtkTreeModel *model, gint column, const gchar
     return result;
 }
 
+static void resize_to_treeview(GtkWindow* window, GtkTreeView* treeview) {
+    gint uiHeight, cellHeight, rows;
+    GdkRectangle r;
+
+    GtkTreeViewColumn *col = gtk_tree_view_get_column(treeview, 0);
+    if (!col)
+        return;
+
+    gtk_tree_view_column_cell_get_size(col, NULL, NULL, NULL, NULL, &cellHeight);
+    rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(treeview), NULL);
+
+    gtk_tree_view_get_visible_rect(treeview, &r);
+    uiHeight = defaultHeight - r.height;
+
+    gtk_window_resize(window, 500, uiHeight + cellHeight * rows);
+}
+
 int start_gui (SensorSource *ss) {
     GtkWidget *about_btn;
     GtkWidget *clear_btn;
@@ -195,7 +213,7 @@ int start_gui (SensorSource *ss) {
 
     window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_position(GTK_WINDOW(window), GTK_WIN_POS_CENTER);
-    gtk_window_set_default_size(GTK_WINDOW(window), 480, 350);
+    gtk_window_set_default_size(GTK_WINDOW(window), 500, defaultHeight);
 
     header = gtk_header_bar_new();
     gtk_header_bar_set_show_close_button(GTK_HEADER_BAR (header), TRUE);
@@ -246,6 +264,8 @@ int start_gui (SensorSource *ss) {
     if (check_zen()){
         sensor_sources = ss;
         init_sensors();
+
+        resize_to_treeview(GTK_WINDOW(window), GTK_TREE_VIEW(treeview));
         timeout = g_timeout_add(300, update_data, NULL);
     }
     else{
@@ -260,4 +280,3 @@ int start_gui (SensorSource *ss) {
     gtk_main();
     return 0;
 }
-
