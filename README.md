@@ -27,6 +27,7 @@ make
 You can launch app by `sudo ./zenmonitor`, or you can install it to your system and then launch it from your OS menu.
 
 Note: Because superuser privileges are usually needed to access data from MSR driver, you need to launch zenmonitor as root for monitoring CPU power usage (RAPL).
+Alternatively, you can set capabilities to zenmonitor executable: `sudo setcap cap_sys_rawio,cap_dac_read_search+ep ./zenmonitor`
 
 ## Command line arguments
 
