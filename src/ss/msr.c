@@ -125,18 +125,24 @@ void msr_update() {
         core_eng_a[i] = get_core_energy(i);
     }
 
-    package_power = (package_eng_a - package_eng_b) * energy_unit / MESUREMENT_TIME;
-    if (package_power < package_power_min)
-        package_power_min = package_power;
-    if (package_power > package_power_max)
-        package_power_max = package_power;
+    if (package_eng_a >= package_eng_b) {
+        package_power = (package_eng_a - package_eng_b) * energy_unit / MESUREMENT_TIME;
+
+        if (package_power < package_power_min)
+            package_power_min = package_power;
+        if (package_power > package_power_max)
+            package_power_max = package_power;
+    }
 
     for (i = 0; i < cores; i++) {
-        core_power[i] = (core_eng_a[i] - core_eng_b[i]) * energy_unit / MESUREMENT_TIME;
-        if (core_power[i] < core_power_min[i])
-            core_power_min[i] = core_power[i];
-        if (core_power[i] > core_power_max[i])
-            core_power_max[i] = core_power[i];
+        if (core_eng_a[i] >= core_eng_b[i]) {
+            core_power[i] = (core_eng_a[i] - core_eng_b[i]) * energy_unit / MESUREMENT_TIME;
+
+            if (core_power[i] < core_power_min[i])
+                core_power_min[i] = core_power[i];
+            if (core_power[i] > core_power_max[i])
+                core_power_max[i] = core_power[i];
+        }
     }
 }
 
