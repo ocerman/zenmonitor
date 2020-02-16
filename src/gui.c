@@ -142,7 +142,7 @@ static void add_columns (GtkTreeView *treeview) {
 static void about_btn_clicked(GtkButton *button, gpointer user_data) {
     GtkWidget *dialog;
     const gchar *website = "https://github.com/ocerman/zenmonitor";
-    const gchar *msg = "<b>Zen Monitor</b> 1.3.1\n"
+    const gchar *msg = "<b>Zen Monitor</b> 1.4.0\n"
                        "Monitoring software for AMD Zen-based CPUs\n"
                        "<a href=\"%s\">%s</a>\n\n"
                        "Created by: Ondrej Čerman";
