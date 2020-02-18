@@ -6,6 +6,7 @@
 #include "msr.h"
 #include "os.h"
 #include "gui.h"
+#include "stdlib.h"
 
 #define AMD_STRING "AuthenticAMD"
 #define ZEN_FAMILY 0x17
