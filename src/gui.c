@@ -185,7 +185,7 @@ static gboolean mid_search_eq_func(GtkTreeModel *model, gint column, const gchar
 }
 
 static void resize_to_treeview(GtkWindow* window, GtkTreeView* treeview) {
-    gint uiHeight, cellHeight, rows;
+    gint uiHeight, cellHeight, vSeparator, rows;
     GdkRectangle r;
 
     GtkTreeViewColumn *col = gtk_tree_view_get_column(treeview, 0);
@@ -193,12 +193,13 @@ static void resize_to_treeview(GtkWindow* window, GtkTreeView* treeview) {
         return;
 
     gtk_tree_view_column_cell_get_size(col, NULL, NULL, NULL, NULL, &cellHeight);
+    gtk_widget_style_get(GTK_WIDGET(treeview), "vertical-separator", &vSeparator, NULL);
     rows = gtk_tree_model_iter_n_children(gtk_tree_view_get_model(treeview), NULL);
 
     gtk_tree_view_get_visible_rect(treeview, &r);
     uiHeight = defaultHeight - r.height;
 
-    gtk_window_resize(window, 500, uiHeight + cellHeight * rows);
+    gtk_window_resize(window, 500, uiHeight + (vSeparator + cellHeight) * rows);
 }
 
 int start_gui (SensorSource *ss) {
