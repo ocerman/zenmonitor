@@ -1,6 +1,7 @@
 #include <gtk/gtk.h>
 #include <cpuid.h>
 #include <string.h>
+#include <stdlib.h>
 #include "zenmonitor.h"
 #include "zenpower.h"
 #include "msr.h"
