@@ -11,6 +11,7 @@
 #include "sysfs.h"
 
 #define MSR_PWR_PRINTF_FORMAT " %8.3f W"
+#define MSR_FID_PRINTF_FORMAT " %8.3f GHz"
 #define MESUREMENT_TIME 0.1
 
 // AMD PPR  = https://www.amd.com/system/files/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
@@ -31,8 +32,11 @@ gfloat package_power;
 gfloat package_power_min;
 gfloat package_power_max;
 gfloat *core_power;
+gfloat *core_fid;
 gfloat *core_power_min;
 gfloat *core_power_max;
+gfloat *core_fid_min;
+gfloat *core_fid_max;
 
 
 static gint open_msr(gshort devid) {
@@ -75,6 +79,26 @@ gulong get_core_energy(gint core) {
     return data;
 }
 
+gdouble get_core_fid(gint core) {
+    gdouble ratio;
+    gulong data;
+
+    // By reverse-engineering Ryzen Master, we know that
+    //  this undocumented MSR is responsible for returning
+    //  the FID and FDID for the core used for calculating the
+    //  effective frequency.
+    //
+    // The FID is returned in bits [8:0]
+    // The FDID is returned in bits [14:8]
+    if (!read_msr(msr_files[core], 0xC0010293, &data))
+        return 0;
+
+    ratio = (gdouble)(data & 0xff) / (gdouble)((data >> 8) & 0x3F);
+
+    // The effective ratio is based on increments of 200 MHz.
+    return ratio * 200.0 / 1000.0;
+}
+
 gboolean msr_init() {
     guint i;
 
@@ -98,12 +122,17 @@ gboolean msr_init() {
     core_eng_b = malloc(cores * sizeof (gulong));
     core_eng_a = malloc(cores * sizeof (gulong));
     core_power = malloc(cores * sizeof (gfloat));
+    core_fid = malloc(cores * sizeof (gfloat));
     core_power_min = malloc(cores * sizeof (gfloat));
     core_power_max = malloc(cores * sizeof (gfloat));
+    core_fid_min = malloc(cores * sizeof (gfloat));
+    core_fid_max = malloc(cores * sizeof (gfloat));
 
     msr_update();
     memcpy(core_power_min, core_power, cores * sizeof (gfloat));
     memcpy(core_power_max, core_power, cores * sizeof (gfloat));
+    memcpy(core_fid_min, core_fid, cores * sizeof (gfloat));
+    memcpy(core_fid_max, core_fid, cores * sizeof (gfloat));
     package_power_min = package_power;
     package_power_max = package_power;
 
@@ -143,6 +172,13 @@ void msr_update() {
             if (core_power[i] > core_power_max[i])
                 core_power_max[i] = core_power[i];
         }
+
+        core_fid[i] = get_core_fid(i);
+
+        if (core_fid[i] < core_fid_min[i])
+            core_fid_min[i] = core_fid[i];
+        if (core_fid[i] > core_fid_max[i])
+            core_fid_max[i] = core_fid[i];
     }
 }
 
@@ -154,6 +190,8 @@ void msr_clear_minmax() {
     for (i = 0; i < cores; i++) {
         core_power_min[i] = core_power[i];
         core_power_max[i] = core_power[i];
+        core_fid_min[i] = core_fid[i];
+        core_fid_max[i] = core_fid[i];
     }
 }
 
@@ -169,6 +207,16 @@ GSList* msr_get_sensors() {
     data->max = &package_power_max;
     data->printf_format = MSR_PWR_PRINTF_FORMAT;
     list = g_slist_append(list, data);
+
+    for (i = 0; i < cores; i++) {
+        data = sensor_init_new();
+        data->label = g_strdup_printf("Core %d Effective Frequency", display_coreid ? cpu_dev_ids[i].coreid: i);
+        data->value = &(core_fid[i]);
+        data->min = &(core_fid_min[i]);
+        data->max = &(core_fid_max[i]);
+        data->printf_format = MSR_FID_PRINTF_FORMAT;
+        list = g_slist_append(list, data);
+    }
 
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
