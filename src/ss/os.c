@@ -15,11 +15,11 @@ gfloat *core_freq;
 gfloat *core_freq_min;
 gfloat *core_freq_max;
 
-static gdouble get_frequency(guint coreid) {
+static gdouble get_frequency(guint corei) {
     gchar *data;
     gdouble freq;
 
-    if (!g_file_get_contents(frq_files[coreid], &data, NULL, NULL))
+    if (!g_file_get_contents(frq_files[corei], &data, NULL, NULL))
         return 0.0;
 
     freq = atoi(data) / 1000000.0;
