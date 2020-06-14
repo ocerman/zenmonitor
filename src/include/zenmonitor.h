@@ -1,8 +1,10 @@
 #define ERROR_VALUE -999.0
+#define VERSION "1.4.2"
 
 typedef struct
 {
     gchar *label;
+    gchar *hint;
     float *value;
     float *min;
     float *max;

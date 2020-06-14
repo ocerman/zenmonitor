@@ -10,6 +10,7 @@ static int nodes = 0;
 typedef struct
 {
     const gchar *label;
+    const gchar *hint;
     const gchar *file;
     const gchar *printf_format;
     const double adjust_ratio;
@@ -26,22 +27,26 @@ typedef struct
 } HwmonSensor;
 
 static HwmonSensorType hwmon_stype[] = {
-  {"CPU Temperature (tCtl)",    "temp1_input",  " %6.2f°C", 1000.0},
-  {"CPU Temperature (tDie)",    "temp2_input",  " %6.2f°C", 1000.0},
-  {"CCD1 Temperature",          "temp3_input",  " %6.2f°C", 1000.0},
-  {"CCD2 Temperature",          "temp4_input",  " %6.2f°C", 1000.0},
-  {"CCD3 Temperature",          "temp5_input",  " %6.2f°C", 1000.0},
-  {"CCD4 Temperature",          "temp6_input",  " %6.2f°C", 1000.0},
-  {"CCD5 Temperature",          "temp7_input",  " %6.2f°C", 1000.0},
-  {"CCD6 Temperature",          "temp8_input",  " %6.2f°C", 1000.0},
-  {"CCD7 Temperature",          "temp9_input",  " %6.2f°C", 1000.0},
-  {"CCD8 Temperature",          "temp10_input", " %6.2f°C", 1000.0},
-  {"CPU Core Voltage (SVI2)",   "in1_input",    " %8.3f V", 1000.0},
-  {"SOC Voltage (SVI2)",        "in2_input",    " %8.3f V", 1000.0},
-  {"CPU Core Current (SVI2)",   "curr1_input",  " %8.3f A", 1000.0},
-  {"SOC Current (SVI2)",        "curr2_input",  " %8.3f A", 1000.0},
-  {"CPU Core Power (SVI2)",     "power1_input", " %8.3f W", 1000000.0},
-  {"SOC Power (SVI2)",          "power2_input", " %8.3f W", 1000000.0},
+  {"CPU Temperature (tCtl)",    "Reported CPU Temperature",                  "temp1_input",  " %6.2f°C", 1000.0},
+  {"CPU Temperature (tDie)",    "Reported CPU Temperature - offset",         "temp2_input",  " %6.2f°C", 1000.0},
+  {"CCD1 Temperature",          "Core Complex Die 1 Temperature",            "temp3_input",  " %6.2f°C", 1000.0},
+  {"CCD2 Temperature",          "Core Complex Die 2 Temperature",            "temp4_input",  " %6.2f°C", 1000.0},
+  {"CCD3 Temperature",          "Core Complex Die 3 Temperature",            "temp5_input",  " %6.2f°C", 1000.0},
+  {"CCD4 Temperature",          "Core Complex Die 4 Temperature",            "temp6_input",  " %6.2f°C", 1000.0},
+  {"CCD5 Temperature",          "Core Complex Die 5 Temperature",            "temp7_input",  " %6.2f°C", 1000.0},
+  {"CCD6 Temperature",          "Core Complex Die 6 Temperature",            "temp8_input",  " %6.2f°C", 1000.0},
+  {"CCD7 Temperature",          "Core Complex Die 7 Temperature",            "temp9_input",  " %6.2f°C", 1000.0},
+  {"CCD8 Temperature",          "Core Complex Die 8 Temperature",            "temp10_input", " %6.2f°C", 1000.0},
+  {"CPU Core Voltage (SVI2)",   "Core Voltage reported by SVI2 telemetry",   "in1_input",    " %8.3f V", 1000.0},
+  {"SOC Voltage (SVI2)",        "SOC Voltage reported by SVI2 telemetry",    "in2_input",    " %8.3f V", 1000.0},
+  {"CPU Core Current (SVI2)",   "Core Current reported by SVI2 telemetry\n"
+                                "Note: May not be accurate on some systems", "curr1_input",  " %8.3f A", 1000.0},
+  {"SOC Current (SVI2)",        "SOC Current reported by SVI2 telemetry\n"
+                                "Note: May not be accurate on some systems", "curr2_input",  " %8.3f A", 1000.0},
+  {"CPU Core Power (SVI2)",     "Core Voltage * Current\n"
+                                "Note: May not be accurate on some systems", "power1_input", " %8.3f W", 1000000.0},
+  {"SOC Power (SVI2)",          "Core Voltage * Current\n"
+                                "Note: May not be accurate on some systems", "power2_input", " %8.3f W", 1000000.0},
   {0, NULL}
 };
 
@@ -165,6 +170,7 @@ GSList* zenpower_get_sensors() {
         else{
             data->label = g_strdup(sensor->type->label);
         }
+        data->hint = g_strdup_printf("%s\nSource: zenpower %s/%s", sensor->type->hint, sensor->hwmon_dir, sensor->type->file);
         data->value = &sensor->current_value;
         data->min = &sensor->min;
         data->max = &sensor->max;

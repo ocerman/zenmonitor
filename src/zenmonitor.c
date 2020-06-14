@@ -111,6 +111,7 @@ SensorInit *sensor_init_new() {
 void sensor_init_free(SensorInit *s) {
     if (s) {
         g_free(s->label);
+        g_free(s->hint);
         g_free(s);
     }
 }

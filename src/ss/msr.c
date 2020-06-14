@@ -202,6 +202,7 @@ GSList* msr_get_sensors() {
 
     data = sensor_init_new();
     data->label = g_strdup("Package Power");
+    data->hint = g_strdup("Package Power reported by RAPL\nSource: cpu0 MSR");
     data->value = &package_power;
     data->min = &package_power_min;
     data->max = &package_power_max;
@@ -211,6 +212,7 @@ GSList* msr_get_sensors() {
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
         data->label = g_strdup_printf("Core %d Effective Frequency", display_coreid ? cpu_dev_ids[i].coreid: i);
+        data->hint = g_strdup_printf("Source: cpu%d MSR", cpu_dev_ids[i].cpuid);
         data->value = &(core_fid[i]);
         data->min = &(core_fid_min[i]);
         data->max = &(core_fid_max[i]);
@@ -221,6 +223,7 @@ GSList* msr_get_sensors() {
     for (i = 0; i < cores; i++) {
         data = sensor_init_new();
         data->label = g_strdup_printf("Core %d Power", display_coreid ? cpu_dev_ids[i].coreid: i);
+        data->hint = g_strdup_printf("Core Power reported by RAPL\nSource: cpu%d MSR", cpu_dev_ids[i].cpuid);
         data->value = &(core_power[i]);
         data->min = &(core_power_min[i]);
         data->max = &(core_power_max[i]);

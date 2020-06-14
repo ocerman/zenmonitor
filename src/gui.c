@@ -12,6 +12,7 @@ static const guint defaultHeight = 350;
 
 enum {
     COLUMN_NAME,
+    COLUMN_HINT,
     COLUMN_VALUE,
     COLUMN_MIN,
     COLUMN_MAX,
@@ -39,6 +40,7 @@ static void init_sensors() {
                     gtk_list_store_append(store, &iter);
                     gtk_list_store_set(store, &iter,
                                        COLUMN_NAME,  data->label,
+                                       COLUMN_HINT,  data->hint,
                                        COLUMN_VALUE, " --- ",
                                        COLUMN_MIN,   " --- ",
                                        COLUMN_MAX,   " --- ",
@@ -53,7 +55,7 @@ static void init_sensors() {
 
 static GtkTreeModel* create_model (void) {
     GtkListStore *store;
-    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
+    store = gtk_list_store_new (NUM_COLUMNS, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING);
     return GTK_TREE_MODEL (store);
 }
 
@@ -142,7 +144,7 @@ static void add_columns (GtkTreeView *treeview) {
 static void about_btn_clicked(GtkButton *button, gpointer user_data) {
     GtkWidget *dialog;
     const gchar *website = "https://github.com/ocerman/zenmonitor";
-    const gchar *msg = "<b>Zen Monitor</b> 1.4.1\n"
+    const gchar *msg = "<b>Zen Monitor</b> %s\n"
                        "Monitoring software for AMD Zen-based CPUs\n"
                        "<a href=\"%s\">%s</a>\n\n"
                        "Created by: Ondrej Čerman";
@@ -150,7 +152,7 @@ static void about_btn_clicked(GtkButton *button, gpointer user_data) {
     dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW (window),
                                     GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
                                     GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
-                                    msg, website, website);
+                                    msg, VERSION, website, website);
 
     gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(dialog);
@@ -251,6 +253,7 @@ int start_gui (SensorSource *ss) {
 
     model = create_model();
     treeview = gtk_tree_view_new_with_model(model);
+    gtk_tree_view_set_tooltip_column(GTK_TREE_VIEW(treeview), COLUMN_HINT);
 
     gtk_container_add (GTK_CONTAINER(sw), treeview);
     add_columns(GTK_TREE_VIEW(treeview));
