@@ -1,5 +1,6 @@
 #include <cpuid.h>
 #include <gtk/gtk.h>
+#include <stdlib.h>
 #include "gui.h"
 #include "zenmonitor.h"
 
@@ -158,6 +159,79 @@ static void about_btn_clicked(GtkButton *button, gpointer user_data) {
     gtk_widget_destroy(dialog);
 }
 
+static GtkWidget* find_child(GtkWidget* parent, const gchar* name) {
+    GtkWidget *widget;
+    GList *children;
+
+    if (!strcmp(gtk_widget_get_name(parent), name))
+        return parent;
+
+    if (!GTK_IS_CONTAINER(parent))
+        return NULL;
+
+    children = gtk_container_get_children(GTK_CONTAINER(parent));
+
+    do {
+        widget = find_child(children->data, name);
+
+        if (widget != NULL)
+            return widget;
+    } while (children = g_list_next(children), children != NULL);
+
+    return NULL;
+}
+
+static void updaterate_dialog_response(GtkWidget* widget) {
+    GtkWidget *entry, *dialog;
+    const gchar *text;
+    guint val;
+
+    entry = find_child(widget, "update_interval");
+    text = gtk_entry_get_text(GTK_ENTRY (entry));
+
+    val = atoi(text);
+
+    if (val < 50 || val > 60000) {
+        dialog = gtk_message_dialog_new_with_markup(GTK_WINDOW (window),
+                GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                GTK_MESSAGE_INFO, GTK_BUTTONS_OK,
+                "<b>Invalid Update Rate</b>\n"
+                "Enter a value between 50 and 60000 milliseconds.");
+
+        gtk_dialog_run(GTK_DIALOG(dialog));
+        gtk_widget_destroy(dialog);
+        return;
+    }
+
+    g_source_remove(timeout);
+    timeout = g_timeout_add(val, update_data, NULL);
+
+    gtk_widget_destroy(widget);
+}
+
+static void urate_btn_clicked(GtkButton* button, gpointer user_data) {
+    GtkWidget *dialog, *entry, *hbox;
+
+    entry = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY (entry), "1000");
+    gtk_entry_set_max_length(GTK_ENTRY (entry), 6);
+    gtk_widget_set_name(entry, "update_interval");
+
+    hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 30);
+    gtk_box_pack_start(GTK_BOX (hbox), gtk_label_new("Update Interval (msec):"), 1, 1, 0);
+    gtk_box_pack_end(GTK_BOX (hbox), entry, 1, 1, 1);
+    gtk_box_set_center_widget(GTK_BOX (hbox), entry);
+
+    dialog = gtk_dialog_new_with_buttons ("Set Update Interval", GTK_WINDOW(window),
+        GTK_DIALOG_MODAL, "Apply", GTK_RESPONSE_OK, NULL);
+
+    g_signal_connect_swapped (GTK_DIALOG (dialog), "response",
+        G_CALLBACK (updaterate_dialog_response), dialog);
+    gtk_container_add (GTK_CONTAINER (gtk_dialog_get_content_area(GTK_DIALOG (dialog))), hbox);
+
+    gtk_widget_show_all(dialog);
+}
+
 static void clear_btn_clicked(GtkButton *button, gpointer user_data) {
     SensorSource *source;
 
@@ -205,6 +279,7 @@ static void resize_to_treeview(GtkWindow* window, GtkTreeView* treeview) {
 }
 
 int start_gui (SensorSource *ss) {
+    GtkWidget *urate_btn;
     GtkWidget *about_btn;
     GtkWidget *clear_btn;
     GtkWidget *box;
@@ -228,6 +303,11 @@ int start_gui (SensorSource *ss) {
     box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_style_context_add_class (gtk_widget_get_style_context (box), "linked");
 
+    urate_btn = gtk_button_new();
+    gtk_container_add(GTK_CONTAINER(urate_btn), gtk_image_new_from_icon_name("preferences-system", GTK_ICON_SIZE_BUTTON));
+    gtk_container_add(GTK_CONTAINER(box), urate_btn);
+    gtk_widget_set_tooltip_text(urate_btn, "Update polling rate");
+
     about_btn = gtk_button_new();
     gtk_container_add(GTK_CONTAINER(about_btn), gtk_image_new_from_icon_name("dialog-information", GTK_ICON_SIZE_BUTTON));
     gtk_container_add(GTK_CONTAINER(box), about_btn);
@@ -240,6 +320,7 @@ int start_gui (SensorSource *ss) {
 
     gtk_header_bar_pack_start(GTK_HEADER_BAR(header), box);
     g_signal_connect(about_btn, "clicked", G_CALLBACK(about_btn_clicked), NULL);
+    g_signal_connect(urate_btn, "clicked", G_CALLBACK(urate_btn_clicked), NULL);
     g_signal_connect(clear_btn, "clicked", G_CALLBACK(clear_btn_clicked), NULL);
     g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
