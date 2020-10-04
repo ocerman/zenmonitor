@@ -1,3 +1,8 @@
+#ifndef __ZENMONITOR_ZENMONITOR_H__
+#define __ZENMONITOR_ZENMONITOR_H__
+
+#include <glib.h>
+
 #define ERROR_VALUE -999.0
 #define VERSION "1.4.2"
 
@@ -28,3 +33,5 @@ gboolean check_zen();
 gchar *cpu_model();
 guint get_core_count();
 extern gboolean display_coreid;
+
+#endif /* __ZENMONITOR_ZENMONITOR_H__ */
