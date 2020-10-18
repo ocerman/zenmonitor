@@ -1,5 +1,6 @@
 #include <cpuid.h>
 #include <gtk/gtk.h>
+#include <stdio.h>
 #include "gui.h"
 #include "zenmonitor.h"
 
