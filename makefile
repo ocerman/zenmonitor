@@ -1,9 +1,28 @@
+CC := cc
+
 ifeq ($(PREFIX),)
 	PREFIX := /usr/local
 endif
 
+BUILD_FILES_COMMON := \
+	src/ss/*.c \
+	src/sysfs.c \
+	src/zenmonitor-lib.c
+
+BUILD_FILES_GUI := \
+	$(BUILD_FILES_COMMON) \
+	src/gui.c \
+	src/zenmonitor.c
+
+BUILD_FILES_CLI := \
+	$(BUILD_FILES_COMMON) \
+	src/zenmonitor-cli.c
+
 build:
-	cc -Isrc/include `pkg-config --cflags gtk+-3.0` src/*.c src/ss/*.c -o zenmonitor `pkg-config --libs gtk+-3.0` -lm -no-pie -Wall
+	$(CC) -Isrc/include `pkg-config --cflags gtk+-3.0` $(BUILD_FILES_GUI) -o zenmonitor `pkg-config --libs gtk+-3.0` -lm -no-pie -Wall $(CFLAGS)
+
+build-cli:
+	$(CC) -Isrc/include `pkg-config --cflags glib-2.0` $(BUILD_FILES_CLI) -o zenmonitor-cli `pkg-config --libs glib-2.0` -lm -no-pie -Wall $(CFLAGS)
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
@@ -13,6 +32,10 @@ install:
 	sed -e "s|@APP_EXEC@|${DESTDIR}${PREFIX}/bin/zenmonitor|" \
 			data/zenmonitor.desktop.in > \
 			$(DESTDIR)$(PREFIX)/share/applications/zenmonitor.desktop
+
+install-cli:
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	install -m 755 zenmonitor-cli $(DESTDIR)$(PREFIX)/bin
 
 install-polkit:
 	sed -e "s|@APP_EXEC@|${DESTDIR}${PREFIX}/bin/zenmonitor|" \
@@ -29,5 +52,9 @@ uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/share/applications/zenmonitor-root.desktop
 	rm -f $(DESTDIR)/usr/share/polkit-1/actions/org.pkexec.zenmonitor.policy
 
+all: build build-cli
+
 clean:
 	rm -f zenmonitor
+	rm -f zenmonitor-cli
+	rm -f *.o
