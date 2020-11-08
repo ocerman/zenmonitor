@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
 #include <unistd.h>
+#include <signal.h>
 #include "msr.h"
 #include "os.h"
 #include "zenpower.h"
@@ -8,16 +11,18 @@
 
 gboolean display_coreid = 0;
 gdouble delay = 0.5;
-gchar *format = "";
-gchar *columns[2048];
+gchar *file = "";
+SensorDataStore *store;
+int quit = 0;
 
-static GOptionEntry options[] =
-{
-    { "format", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &format, "Output format (csv, json)", "FORMAT" },
-    { "delay", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_DOUBLE, &delay, "Interval of refreshing informations", "SECONDS" },
-    { "coreid", 'c', 0, G_OPTION_ARG_NONE, &display_coreid, "Display core_id instead of core index", NULL },
-    { NULL }
-};
+static GOptionEntry options[] = {
+    {"file", 'f', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &file,
+     "Output to csv file", "FILE"},
+    {"delay", 'd', G_OPTION_FLAG_NONE, G_OPTION_ARG_DOUBLE, &delay,
+     "Interval of refreshing informations", "SECONDS"},
+    {"coreid", 'c', 0, G_OPTION_ARG_NONE, &display_coreid,
+     "Display core_id instead of core index", NULL},
+    {NULL}};
 
 static SensorSource sensor_sources[] = {
     {
@@ -40,11 +45,71 @@ static SensorSource sensor_sources[] = {
     }
 };
 
-void init_sensors() {
+void flush_to_csv()
+{
+    FILE *csv;
+    csv = fopen(file, "w");
+    guint i = 0;
+    int cont = 1;
+
+    fprintf(csv, "time(epoch),");
+    while(cont)
+    {
+        fprintf(csv, "%s", (char*)g_ptr_array_index(store->labels, i++));
+        if(g_ptr_array_index(store->labels, i))
+        {
+            fprintf(csv, ",");
+        }
+        else
+        {
+            cont = 0;
+        }
+    }
+    
+    fprintf(csv, "\n");
+    cont = 1;
+    i = 0;
+
+    while(cont)
+    {
+        struct timespec ts = g_array_index(store->time, struct timespec, i);
+        fprintf(csv, "%ld.%.9ld,", ts.tv_sec, ts.tv_nsec);
+
+        int j = 0;
+        int cont2 = 1;
+        while(cont2)
+        {
+            GArray *data = g_ptr_array_index(store->data, j++);
+            fprintf(csv, "%f", g_array_index(data, float, i));
+            if(g_ptr_array_index(store->data, j))
+            {
+                fprintf(csv, ",");
+            }
+            else
+            {
+                cont2 = 0;
+            }
+        }
+        fprintf(csv, "\n");
+
+        i++;
+
+        if(g_array_index(store->time, struct timespec, i).tv_sec <= 0)
+        {
+            cont = 0;
+        }
+    }
+
+    fclose(csv);
+
+    quit = 1;
+}
+
+void init_sensors()
+{
     GSList *sensor;
     SensorSource *source;
     const SensorInit *data;
-    guint i = 0;
 
     for(source = sensor_sources; source->drv; source++)
     {
@@ -58,13 +123,12 @@ void init_sensors() {
                 while(sensor)
                 {
                     data = (SensorInit*)sensor->data;
-                    columns[i++] = data->label;
+                    sensor_data_store_add_entry(store, data->label);
                     sensor = sensor->next;
                 }
             }
         }
     }
-    columns[i] = NULL;
 }
 
 void update_data()
@@ -72,6 +136,8 @@ void update_data()
     SensorSource *source;
     GSList *node;
     const SensorInit *sensorData;
+
+    sensor_data_store_keep_time(store);
 
     for(source = sensor_sources; source->drv; source++)
     {
@@ -85,23 +151,19 @@ void update_data()
                 while(node)
                 {
                     sensorData = (SensorInit*)node->data;
+                    sensor_data_store_add_data(store, sensorData->label, *sensorData->value);
                     printf("%s\t%f\n", sensorData->label, *sensorData->value);
                     node = node->next;
                 }
             }
         }
     }
+    printf("\v");
 }
 
 void start_watching()
 {
-    guint i = 0;
-    while(columns[i])
-    {
-        printf("%s\n", columns[i++]);
-    }
-
-    while(1)
+    while(!quit)
     {
         update_data();
         usleep(delay * 1000 * 1000);
@@ -120,8 +182,16 @@ int main(int argc, char *argv[])
         exit (1);
     }
 
+    if(strcmp(file, "") != 0)
+    {
+        signal(SIGINT, flush_to_csv);
+    }
+    store = sensor_data_store_new();
+
     init_sensors();
     start_watching();
+
+    sensor_data_store_free(store);
 
     return EXIT_SUCCESS;
 }

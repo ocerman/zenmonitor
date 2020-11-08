@@ -1,4 +1,7 @@
+#include <assert.h>
 #include <cpuid.h>
+#include <strings.h>
+#include <time.h>
 
 #include "zenpower.h"
 #include "msr.h"
@@ -7,6 +10,8 @@
 
 #define AMD_STRING "AuthenticAMD"
 #define ZEN_FAMILY 0x17
+
+const guint SENSOR_DATA_STORE_NUM = 4096;
 
 // AMD PPR = https://www.amd.com/system/files/TechDocs/54945_PPR_Family_17h_Models_00h-0Fh.pdf
 
@@ -78,6 +83,76 @@ guint get_core_count() {
         return logical_cpus;
 
     return logical_cpus / threads_per_code;
+}
+
+SensorDataStore *sensor_data_store_new()
+{
+    SensorDataStore *ret;
+
+    ret = g_new0(SensorDataStore, 1);
+    ret->labels = g_ptr_array_new();
+    ret->data = g_ptr_array_new();
+    ret->time = g_array_new(FALSE, TRUE, sizeof(struct timespec));
+
+    return ret;
+}
+
+void sensor_data_store_add_entry(SensorDataStore *store, gchar *entry)
+{
+    GArray *data;
+    data = g_array_new(TRUE, TRUE, sizeof(float));
+
+    g_ptr_array_add(store->labels, entry);
+    g_ptr_array_add(store->data, data);
+}
+
+void sensor_data_store_keep_time(SensorDataStore *store)
+{
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    g_array_append_val(store->time, ts);
+}
+
+gint sensor_data_store_drop_entry(SensorDataStore *store, gchar *entry)
+{
+    guint index = 0;
+    gboolean found = g_ptr_array_find(store->labels, entry, &index);
+    if(!found)
+    {
+        return 1;
+    }
+
+    g_ptr_array_remove_index(store->labels, index);
+    g_ptr_array_remove_index(store->data, index);
+    
+    return 0;
+}
+
+gint sensor_data_store_add_data(SensorDataStore *store, gchar *entry, float value)
+{
+    guint index = 0;
+    gboolean found = g_ptr_array_find(store->labels, entry, &index);
+
+    if(!found)
+    {
+        return 1;
+    }
+
+    GArray *data = g_ptr_array_index(store->data, index);
+    g_array_append_val(data, value);
+
+    return 0;
+}
+
+void sensor_data_store_free(SensorDataStore *store)
+{
+    if(store)
+    {
+        g_array_free(store->time, TRUE);
+        g_ptr_array_free(store->labels, TRUE);
+        g_ptr_array_free(store->data, TRUE);
+        g_free(store);
+    }
 }
 
 SensorInit *sensor_init_new() {
